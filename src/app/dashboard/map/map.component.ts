@@ -1,45 +1,32 @@
-import { Component, ElementRef, HostListener, Input, NgZone, OnInit } from '@angular/core';
-import { Application, IApplicationOptions } from 'pixi.js';
+import { Component, AfterViewInit } from '@angular/core';
+import * as L from 'leaflet';
 
 @Component({
   selector: 'app-map',
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.scss']
 })
-export class MapComponent implements OnInit {
-  public app: Application;
-  @Input() public devicePixelRatio = window.devicePixelRatio || 1;
-  @Input() public applicationOptions: IApplicationOptions = {};
+export class MapComponent implements AfterViewInit {
+  private map;
 
-  constructor(private elementRef: ElementRef, private ngZone: NgZone) { }
+  constructor() { }
 
-  ngOnInit(): void {
-    this.init();
+  ngAfterViewInit(): void {
+    this.initMap();
   }
 
-  init(): void {
-    this.ngZone.runOutsideAngular(() => {
-      this.app = new Application({});
+  private initMap(): void {
+    this.map = L.map('map', {
+      center: [ 47, 15 ],
+      zoom: 4.5
     });
-    this.elementRef.nativeElement.appendChild(this.app.view);
-  }
 
-  @HostListener('window:resize')
-  public resize() {
-    const width = this.elementRef.nativeElement.offsetWidth;
-    const height = this.elementRef.nativeElement.offsetHeight;
-    const viewportScale = 1 / this.devicePixelRatio;
-    this.app.renderer.resize(width * this.devicePixelRatio, height * this.devicePixelRatio);
-    this.app.view.style.transform = `scale(${viewportScale})`;
-    this.app.view.style.transformOrigin = `top left`;
-  }
+    const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      minZoom: 3,
+      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    });
 
-  destroy() {
-    this.app.destroy();
+    tiles.addTo(this.map);
   }
-
-  ngOnDestroy(): void {
-    this.destroy();
-  }
-
 }
